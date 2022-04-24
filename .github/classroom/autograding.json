@@ -2,7 +2,7 @@
   "tests": [
     {
       "name": "Test 1",
-      "setup": "g++ ./compress.cpp -o compress -O2 -pedantic-errors",
+      "setup": "make",
       "run": "./compress -lzw tests/number.txt output1 && ./compress -d output1 output2 && cmp -s output2 tests/number.txt",
       "input": "",
       "output": "",
