@@ -2,13 +2,11 @@
 
 #include "AlgorithmInterface.h"
 #include "../lib/bitfstream.h"
-#include "../lib/map.h"
+#include "../lib/avl_map.h"
 #include "../lib/vector.h"
-#include <map>
-#include <vector>
 
-using std::map;
-using std::vector;
+using mstd::map;
+using mstd::vector;
 
 namespace Compress {
 

@@ -1,19 +1,14 @@
 #pragma once
 
 #include <iostream>
-#include "utility.h"
+#include "./utility.h"
+#include "./functional.h"
 
 namespace mstd {
 
-    template<typename T>
-    struct less {
-        bool operator()(const T &lhs, const T &rhs) const {
-            return lhs < rhs;
-        }
-    };
-
     //--------------------------------
     // map
+    // WARNING: this implementation doesn't work
     //--------------------------------
     template<typename Key, typename T, typename Compare = less<Key>>
     class map {
