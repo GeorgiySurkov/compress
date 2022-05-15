@@ -1,7 +1,7 @@
 CC=g++
-CFLAGS=-c -pedantic-errors
+CFLAGS=-c -pedantic-errors -std=c++20
 LDFLAGS=
-SOURCES=compress.cpp
+SOURCES=compress.cpp algorithms.cpp lib/cstring.cpp algorithms/Huffman.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=compress
 
@@ -14,4 +14,4 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -rf *.o $(EXECUTABLE)
+	rm -rf **/*.o *.o $(EXECUTABLE)
