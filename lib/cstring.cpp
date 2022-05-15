@@ -22,4 +22,27 @@ namespace mstd {
         return result;
     }
 
+    unsigned int strlen(const char *s) {
+        unsigned int count = 0;
+        while (*s != '\0') {
+            count++;
+            s++;
+        }
+        return count;
+    }
+
+    char *strcpy(char *dst, const char *src) {
+        if (dst == nullptr) {
+            return nullptr;
+        }
+        char *ptr = dst;
+        while (*src != '\0') {
+            *dst = *src;
+            dst++;
+            src++;
+        }
+        *dst = '\0';
+        return ptr;
+    }
+
 } // mstd

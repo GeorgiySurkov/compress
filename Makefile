@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -pedantic-errors -std=c++20
 LDFLAGS=
-SOURCES=compress.cpp algorithms.cpp lib/cstring.cpp algorithms/Huffman.cpp
+SOURCES=compress.cpp algorithms.cpp lib/cstring.cpp algorithms/Huffman.cpp lib/string.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=compress
 

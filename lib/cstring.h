@@ -8,4 +8,8 @@ namespace mstd {
 
     int strncmp(const char* s1, const char* s2, size_t n);
 
+    unsigned int strlen(const char *s);
+
+    char* strcpy(char* dst, const char* src);
+
 }
