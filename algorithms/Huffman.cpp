@@ -47,6 +47,7 @@ namespace Compress {
 
         // Encoding data
         map<symbol_t, vector<bool>> symbol2code = traverseTree(root);
+        delete root;
         in.clear();
         in.seekg(dataBegin);
         while (in.get(currChar)) {
@@ -83,6 +84,7 @@ namespace Compress {
                 }
             }
         }
+        delete root;
     }
 
     void Huffman::saveTree(Node *node, obitstream &os) {
