@@ -85,16 +85,11 @@ namespace mstd {
         //--------------------------------
         // Copy and move constructors
         //--------------------------------
-        map(const map &m) {
-            _comp = m._comp;
-            _size = m._size;
+        map(const map &m) : _comp(m._comp), _size(m._size), _root(nullptr) {
             _root = clone_node(m._root);
         }
 
-        map(map &&m) noexcept {
-            _comp = std::move(m._comp);
-            _size = m._size;
-            _root = m._root;
+        map(map &&m) noexcept : _comp(std::move(m._comp)), _size(m._size), _root(m._root) {
             m._root = nullptr;
         }
 

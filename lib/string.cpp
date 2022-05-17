@@ -10,6 +10,13 @@ namespace mstd {
         mstd::strcpy(_data, s);
     }
 
+    string::string(size_t n, char c) : _len(n), _cap(n + 1), _data(nullptr) {
+        _data = new char[_cap];
+        for (char *curr = _data; curr < _data + _len; ++curr) {
+            *curr = c;
+        }
+    }
+
     string::~string() {
         delete[] _data;
     }
@@ -163,11 +170,6 @@ namespace mstd {
         return *this;
     }
 
-    inline string &string::operator+=(char ch) {
-        push_back(ch);
-        return *this;
-    }
-
     string &string::operator+=(const char *s) {
         size_t s_len = strlen(s);
         if (_len + s_len + 1 > _cap) {
@@ -185,11 +187,11 @@ namespace mstd {
         }
     }
 
-    inline bool operator==(const string &lhs, const string &rhs) {
+    bool operator==(const string &lhs, const string &rhs) {
         return mstd::strcmp(lhs._data, rhs._data) == 0;
     }
 
-    inline bool operator<(const string &lhs, const string &rhs) {
+    bool operator<(const string &lhs, const string &rhs) {
         return mstd::strcmp(lhs._data, rhs._data) < 0;
     }
 

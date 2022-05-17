@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AlgorithmInterface.h"
-#include "../lib/bitfstream.h"
+#include "../lib/bitstream.h"
 #include "../lib/avl_map.h"
 #include "../lib/vector.h"
 

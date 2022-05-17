@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include "functional.h"
 
 namespace mstd {
 
@@ -17,6 +18,8 @@ namespace mstd {
         // Constructors and destructor
         //--------------------------------
         string(const char *s = "");
+
+        string(size_t n, char c);
 
         ~string();
 
@@ -193,7 +196,10 @@ namespace mstd {
 
         string &operator+=(const string &s);
 
-        string &operator+=(char ch);
+        inline string &operator+=(char ch) {
+            push_back(ch);
+            return *this;
+        }
 
         string &operator+=(const char *s);
 
@@ -203,6 +209,16 @@ namespace mstd {
         // Non-member functions
         //--------------------------------
         friend inline string operator+(string lhs, const string &rhs) {
+            lhs += rhs;
+            return lhs;
+        }
+
+        friend inline string operator+(string lhs, char rhs) {
+            lhs += rhs;
+            return lhs;
+        }
+
+        friend inline string operator+(string lhs, const char *rhs) {
             lhs += rhs;
             return lhs;
         }

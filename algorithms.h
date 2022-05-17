@@ -2,12 +2,13 @@
 
 #include "algorithms/AlgorithmInterface.h"
 #include "algorithms/Huffman.h"
+#include "algorithms/LZW.h"
 
 namespace Compress {
 
     enum class AlgorithmType {
         HUFFMAN,
-//        LZW
+        LZW
     };
 
     void decompress(std::ifstream &in, std::ofstream &out);
