@@ -62,7 +62,7 @@ namespace Compress {
 
         ~obitstream() {
             if (_bitCount > 0)
-                _os.put(_buffer);
+                _os.put((char) _buffer);
         }
 
         void putBit(bool x) {
@@ -70,7 +70,7 @@ namespace Compress {
             _buffer = _buffer | (S << (7 - _bitCount));
             ++_bitCount;
             if (_bitCount == 8) {
-                _os.put(_buffer);
+                _os.put((char) _buffer);
                 _bitCount = 0;
                 _buffer = 0;
             }
@@ -92,7 +92,7 @@ namespace Compress {
             } else {
                 for (const unsigned char *curr = ptr; curr < ptr + n; ++curr) {
                     _buffer |= *curr >> _bitCount;
-                    _os.put(_buffer);
+                    _os.put((char) _buffer);
                     _buffer = *curr << (8 - _bitCount);
                 }
             }
