@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -pedantic-errors -std=c++20
+CFLAGS=-c -pedantic-errors -std=c++17
 LDFLAGS=
 SOURCES=compress.cpp algorithms.cpp lib/cstring.cpp lib/string.cpp algorithms/Huffman.cpp algorithms/LZW.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
