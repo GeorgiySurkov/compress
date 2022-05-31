@@ -9,21 +9,20 @@ using mstd::vector;
 namespace Compress {
 
     class LZW final : public AlgorithmInterface {
-        using code_t = uint64_t;
-        using byte_sequence = vector<char>;
+        using code_t = int64_t;
 
-        struct ByteSequenceCompare {
-            bool operator()(const byte_sequence &lhs, const byte_sequence &rhs) const {
-                if (lhs.size() != rhs.size()) {
-                    return lhs.size() < rhs.size();
+        struct LzwSequence {
+            code_t prevSequenceCode;
+            code_t endingChar;
+        };
+
+        struct LzwSequenceCompare {
+            bool operator()(const LzwSequence &code1, const LzwSequence &code2) const {
+                if (code1.prevSequenceCode != code2.prevSequenceCode) {
+                    return code1.prevSequenceCode < code2.prevSequenceCode;
                 }
-                for (size_t i = 0; i < lhs.size(); i++) {
-                    if (lhs[i] != rhs[i]) {
-                        return lhs[i] < rhs[i];
-                    }
-                }
-                return false;
-            }
+                return code1.endingChar < code2.endingChar;
+            };
         };
 
     public:
@@ -36,9 +35,9 @@ namespace Compress {
 
         static void writeCode(obitstream &bs, code_t code, unsigned char meaningBits);
 
-        static void writeByteSequence(obitstream &bs, const byte_sequence &bytes);
+        static void writeSequenceByCode(vector<LzwSequence> &table, code_t code, std::ofstream &out);
 
-        static void writeByteSequence(std::ostream &os, const byte_sequence &bytes);
+        static code_t getFirstCharOfSequence(vector<LzwSequence> &table, code_t code);
     };
 
 } // Compress

@@ -6,101 +6,59 @@ using mstd::map;
 namespace Compress {
 
     void LZW::compress(std::ifstream &in, std::ofstream &out) {
-        // Initialize table
-        map<byte_sequence, code_t, ByteSequenceCompare> table;
-        code_t lastCode;
-        unsigned char meaningBits = 8;
-        for (lastCode = 0; lastCode <= 0xFF; lastCode++) {
-            table[byte_sequence(1, (char) lastCode)] = lastCode;
-        }
-
-        // Encode data
+        map<LzwSequence, code_t, LzwSequenceCompare> table;
+        code_t lastCode = 0xFF;
+        unsigned char meaningBits = 9;
+        unsigned maxCode = 1 << meaningBits;
         obitstream bs(out);
-        char currChar;
-        byte_sequence currString;
-        while (in.get(currChar)) {
-            byte_sequence newString = currString;
-            newString.push_back(currChar);
-            auto it = table.find(newString);
-            if (it != table.end()) {
-                currString = std::move(newString);
-            } else {
-                writeCode(bs, table[currString], meaningBits);
-                table[newString] = ++lastCode;
-                if (table.size() > (1 << meaningBits)) {
-                    ++meaningBits;
-                }
-                if (meaningBits > 64) {
-                    throw std::runtime_error("Bad file");
-                }
-                currString = byte_sequence(1, currChar);
-            }
+        LzwSequence curr;
+        curr.prevSequenceCode = in.get();
+        if (curr.prevSequenceCode == EOF) {
+            return;
         }
-        writeCode(bs, table[currString], meaningBits);
+        while ((curr.endingChar = in.get()) != EOF) {
+            auto p = table.find(curr);
+            while (p != table.end()) {
+                curr.prevSequenceCode = p->second;
+                if ((curr.endingChar = in.get()) == EOF) {
+                    writeCode(bs, curr.prevSequenceCode, meaningBits);
+                    return;
+                }
+                p = table.find(curr);
+            }
+            table[curr] = ++lastCode;
+            if (lastCode >= maxCode - 1) {
+                ++meaningBits;
+                maxCode <<= 1;
+            }
+            assert(meaningBits <= 63); // TODO: add support for files that need more than 63 bits for code size
+            writeCode(bs, curr.prevSequenceCode, meaningBits);
+            curr.prevSequenceCode = curr.endingChar;
+        }
+        writeCode(bs, curr.prevSequenceCode, meaningBits);
     }
 
     void LZW::decompress(std::ifstream &in, std::ofstream &out) {
-        // Initialize table
-        map<byte_sequence, code_t, ByteSequenceCompare> table;
-        map<code_t, byte_sequence> codeTable;
-        code_t lastCode;
-        unsigned char meaningBits = 8;
-        for (lastCode = 0; lastCode <= 0xFF; lastCode++) {
-            codeTable[lastCode] = byte_sequence(1, (char) lastCode);
-            table[byte_sequence(1, (char) lastCode)] = lastCode;
-        }
-
-        // Decode data
+        vector<LzwSequence> table;
+        unsigned char meaningBits = 9;
+        unsigned maxCode = 1 << meaningBits;
         ibitstream bs(in);
-        code_t currCode = readCode(bs, meaningBits);
-        if (in.bad()) {
-            return;
-        }
-        auto currCodeIt = codeTable.find(currCode);
-        if (currCodeIt == codeTable.end()) {
-            throw std::runtime_error("Bad file");
-        }
-        byte_sequence currString = currCodeIt->second, newString;
-        ++meaningBits; // Here we know exactly that there are new phrases in table, so we should increment code size.
-        auto prevCodeIt = currCodeIt;
-        currCode = readCode(bs, meaningBits);
-        currCodeIt = codeTable.find(currCode);
-        if (currCodeIt == codeTable.end()) {
-            newString = prevCodeIt->second;
-            newString.push_back(prevCodeIt->second[0]);
-            currCodeIt = codeTable.insert({currCode, newString}).first;
-        }
+        code_t c1 = readCode(bs, meaningBits), c2 = readCode(bs, meaningBits);
         while (in.good()) {
-            newString = currString;
-            newString.push_back(currCodeIt->second[0]);
-            auto newStringIt = table.find(newString);
-            if (newStringIt != table.end()) {
-                currString = std::move(newString);
-            } else {
-                currString = currCodeIt->second;
-                writeByteSequence(out, prevCodeIt->second);
-
-                // Add new code to table
-                ++lastCode;
-                codeTable[lastCode] = newString;
-                table[newString] = lastCode;
-                if (table.size() >= (1 << meaningBits)) {
-                    ++meaningBits;
-                }
-                if (meaningBits > 32) {
-                    throw std::runtime_error("Bad file");
-                }
+            writeSequenceByCode(table, c1, out);
+            table.push_back((c2 - 0xFF >= (code_t) table.size() + 1)
+                            ? LzwSequence{c1, getFirstCharOfSequence(table, c1)}
+                            : LzwSequence{c1, getFirstCharOfSequence(table, c2)}
+            );
+            c1 = c2;
+            if (table.size() + 0xFF >= maxCode - 3) {
+                ++meaningBits;
+                maxCode <<= 1;
             }
-            prevCodeIt = currCodeIt;
-            currCode = readCode(bs, meaningBits);
-            currCodeIt = codeTable.find(currCode);
-            if (currCodeIt == codeTable.end()) {
-                newString = prevCodeIt->second;
-                newString.push_back(prevCodeIt->second[0]);
-                currCodeIt = codeTable.insert({currCode, newString}).first;
-            }
+            assert(meaningBits <= 63);
+            c2 = readCode(bs, meaningBits);
         }
-        writeByteSequence(out, prevCodeIt->second);
+        writeSequenceByCode(table, c1, out);
     }
 
     LZW::code_t LZW::readCode(ibitstream &bs, unsigned char meaningBits) {
@@ -117,12 +75,29 @@ namespace Compress {
         }
     }
 
-    void LZW::writeByteSequence(obitstream &bs, const LZW::byte_sequence &bytes) {
-        bs.putNBytes((const unsigned char *) bytes.data(), (long) bytes.size());
+    void LZW::writeSequenceByCode(vector<LzwSequence> &table, code_t code, std::ofstream &out) {
+        if (code <= 0xFF) {
+            out.put((char) code);
+            return;
+        }
+        code -= 256;
+        if (table[code].prevSequenceCode > 0xFF) {
+            writeSequenceByCode(table, table[code].prevSequenceCode, out);
+        } else {
+            out.put((char) table[code].prevSequenceCode);
+        }
+        out.put((char) table[code].endingChar);
     }
 
-    void LZW::writeByteSequence(std::ostream &os, const LZW::byte_sequence &bytes) {
-        os.write((const char *) bytes.data(), (long) bytes.size());
+    LZW::code_t LZW::getFirstCharOfSequence(vector<LzwSequence> &table, LZW::code_t code) {
+        if (code <= 0xFF) {
+            return code;
+        }
+        code -= 256;
+        if (table[code].prevSequenceCode > 0xFF) {
+            return getFirstCharOfSequence(table, table[code].prevSequenceCode);
+        }
+        return table[code].prevSequenceCode;
     }
 
 } // Compress
