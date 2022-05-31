@@ -31,7 +31,9 @@ namespace Compress {
                 ++meaningBits;
                 maxCode <<= 1;
             }
-            assert(meaningBits <= 63); // TODO: add support for files that need more than 63 bits for code size
+            if (meaningBits > 63) { // TODO: add support for files that need more than 63 bits for code size
+                throw std::runtime_error("Can't handle file");
+            }
             writeCode(bs, curr.prevSequenceCode, meaningBits);
             curr.prevSequenceCode = curr.endingChar;
         }
@@ -55,7 +57,9 @@ namespace Compress {
                 ++meaningBits;
                 maxCode <<= 1;
             }
-            assert(meaningBits <= 63);
+            if (meaningBits > 63) { // TODO: add support for files that need more than 63 bits for code size
+                throw std::runtime_error("Can't handle file");
+            }
             c2 = readCode(bs, meaningBits);
         }
         writeSequenceByCode(table, c1, out);
