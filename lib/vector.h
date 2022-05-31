@@ -162,6 +162,10 @@ namespace mstd {
 
         const T &front() const { return m_data[0]; }
 
+        T *data() { return m_data; }
+
+        const T *data() const { return m_data; }
+
         void reserve(size_t new_cap);
 
         void resize(size_t new_size, T value = T());
